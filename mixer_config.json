@@ -1,6 +1,6 @@
 {
   "audio": {
-    "sample_rate": 441000,
+    "sample_rate": 48000,
     "chunk_size": 512,
     "enable_pitch_shifting": false,
     "enable_time_stretching": false,
