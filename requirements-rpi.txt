@@ -1,0 +1,34 @@
+# Performance Energy Mixer Requirements - Raspberry Pi / ARM
+# Optimized for low-power ARM devices
+
+# Core audio processing (versiones compatibles con ARM)
+numpy>=1.20.0,<2.0.0
+scipy>=1.7.0,<1.12.0
+librosa>=0.10.0,<0.11.0
+soundfile>=0.12.0
+
+# OSC communication (ligera)
+python-osc>=1.8.0
+
+# Audio file reading
+audioread>=3.0.0
+
+# Time stretching optimizado
+soxr>=0.3.0
+
+# Dependencias de librosa (mínimas)
+joblib>=1.0.0
+decorator>=4.4.0
+numba>=0.56.0  # Versión compatible con ARM
+scikit-learn>=1.0.0,<1.4.0
+
+# Caching
+pooch>=1.0.0
+
+# PyAudio - NO incluir aquí, se instala desde apt
+# pyaudio - Instalar con: sudo apt-get install python3-pyaudio
+
+# Opcional: reducir uso de memoria
+# pydub - NO incluir en RPi (pesado)
+# matplotlib - NO incluir (requiere muchos recursos)
+# jupyter - NO incluir (pesado)
