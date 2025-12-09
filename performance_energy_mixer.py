@@ -284,11 +284,27 @@ class EnergyResponsivePerformance:
         """Load base stems (bass, drums, other) from compatible songs"""
         print("\n🎸 Loading base stems...")
 
-        # Find songs close to target BPM
-        compatible_songs = sorted(
-            self.songs.items(),
-            key=lambda x: abs(x[1].bpm - self.base_bpm)
-        )[:10]
+        # Find songs close to target BPM (within ±10% to avoid distortion)
+        bpm_tolerance = 0.10  # 10%
+        compatible_songs = [
+            (name, song) for name, song in self.songs.items()
+            if abs(song.bpm - self.base_bpm) <= self.base_bpm * bpm_tolerance
+        ]
+
+        if not compatible_songs:
+            print(f"⚠️  No songs found within ±{bpm_tolerance*100:.0f}% of {self.base_bpm} BPM")
+            print(f"   Using closest songs instead (may have pitch changes)")
+            compatible_songs = sorted(
+                self.songs.items(),
+                key=lambda x: abs(x[1].bpm - self.base_bpm)
+            )[:10]
+        else:
+            # Sort by BPM proximity
+            compatible_songs = sorted(
+                compatible_songs,
+                key=lambda x: abs(x[1].bpm - self.base_bpm)
+            )
+            print(f"✅ Found {len(compatible_songs)} compatible songs (BPM ±{bpm_tolerance*100:.0f}%)")
 
         base_types = ['bass', 'drums', 'other']
 
@@ -298,7 +314,8 @@ class EnergyResponsivePerformance:
                     stem_player = self._load_stem(song_name, stem_type)
                     if stem_player:
                         self.base_stems[stem_type] = stem_player
-                        print(f"  ✅ {stem_type}: {song.name.split('(')[0].strip()} (BPM: {song.bpm:.0f})")
+                        bpm_diff = abs(song.bpm - self.base_bpm) / self.base_bpm * 100
+                        print(f"  ✅ {stem_type}: {song.name.split('(')[0].strip()} (BPM: {song.bpm:.0f}, diff: {bpm_diff:.1f}%)")
                         break
 
         print(f"✅ Loaded {len(self.base_stems)} base stems")
@@ -348,15 +365,25 @@ class EnergyResponsivePerformance:
         if not force and time_since_change < self.min_vocal_duration:
             return
 
-        # Find compatible vocals (similar BPM)
+        # Find compatible vocals (BPM ±10% to avoid distortion)
+        bpm_tolerance = 0.10  # 10% tolerance
         compatible = []
         for song_name in self.vocal_tracks:
             song = self.songs[song_name]
-            if abs(song.bpm - self.base_bpm) < self.base_bpm * 0.15:
+            if abs(song.bpm - self.base_bpm) <= self.base_bpm * bpm_tolerance:
                 compatible.append(song_name)
 
         if not compatible:
-            compatible = self.vocal_tracks.copy()
+            print(f"⚠️  No compatible vocals at {self.base_bpm} BPM (±{bpm_tolerance*100:.0f}%)")
+            print(f"   Using wider tolerance (may have pitch changes)")
+            # Fallback to wider tolerance
+            for song_name in self.vocal_tracks:
+                song = self.songs[song_name]
+                if abs(song.bpm - self.base_bpm) < self.base_bpm * 0.20:  # 20% fallback
+                    compatible.append(song_name)
+
+            if not compatible:
+                compatible = self.vocal_tracks.copy()
 
         # Select random vocal (avoid current)
         available = [s for s in compatible if s != self.current_vocal_song_name]
@@ -376,7 +403,9 @@ class EnergyResponsivePerformance:
             self.vocal_repeat_count = 0
 
             song = self.songs[new_vocal_song_name]
-            print(f"🎤 NEW VOCAL: {song.name.split('(')[0].strip()} (BPM: {song.bpm:.0f})")
+            bpm_diff = abs(song.bpm - self.base_bpm) / self.base_bpm * 100
+            pitch_change = "✅ minimal" if bpm_diff < 5 else "⚠️ moderate" if bpm_diff < 10 else "🔴 noticeable"
+            print(f"🎤 NEW VOCAL: {song.name.split('(')[0].strip()} (BPM: {song.bpm:.0f} vs {self.base_bpm:.0f}, diff: {bpm_diff:.1f}%, pitch: {pitch_change})")
 
     def _force_vocal_change(self):
         """Force immediate vocal change"""
