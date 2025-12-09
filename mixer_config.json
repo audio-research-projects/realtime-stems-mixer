@@ -3,7 +3,7 @@
     "sample_rate": 48000,
     "chunk_size": 512,
     "enable_pitch_shifting": false,
-    "enable_time_stretching": false,
+    "enable_time_stretching": true,
     "time_stretch_threshold": 0.05,
     "max_pitch_shift_semitones": 0,
     "soft_limiting": true,

