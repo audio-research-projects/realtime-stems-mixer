@@ -407,10 +407,14 @@ class EnergyResponsivePerformance:
             # Apply master volume
             mixed_audio *= master_vol
 
-            # Soft limiting to prevent clipping
+            # Soft limiting to prevent clipping (más agresivo)
             max_amp = np.max(np.abs(mixed_audio))
-            if max_amp > 0.9:
-                mixed_audio = np.tanh(mixed_audio / max_amp) * 0.9
+            if max_amp > 0.8:
+                # Soft limiting con tanh (más suave que hard clipping)
+                mixed_audio = np.tanh(mixed_audio / max_amp) * 0.8
+            elif max_amp > 0.95:
+                # Hard limiting extremo para prevenir distorsión
+                mixed_audio = np.clip(mixed_audio, -0.95, 0.95)
 
             return (mixed_audio.astype(np.float32).tobytes(), pyaudio.paContinue)
 
