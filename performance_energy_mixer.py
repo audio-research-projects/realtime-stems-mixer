@@ -92,7 +92,7 @@ class StemPlayer:
 class EnergyResponsivePerformance:
     """Smart performance that responds to crowd energy"""
 
-    def __init__(self, stems_dir: str = "../../stems", structures_dir: str = "song-structures",
+    def __init__(self, stems_dir: str = "stems", structures_dir: str = "song-structures",
                  osc_port: int = 5005, config_file: str = "mixer_config.json",
                  auto_start: bool = True, base_bpm: float = 120.0):
 
