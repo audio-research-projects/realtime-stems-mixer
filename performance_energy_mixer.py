@@ -125,8 +125,20 @@ class EnergyResponsivePerformance:
     """Smart performance that responds to crowd energy"""
 
     def __init__(self, stems_dir: str = "stems", structures_dir: str = "song-structures",
-                 osc_port: int = 5005, config_file: str = "mixer_config.json",
+                 osc_port: int = 5005, config_file: str = None,
                  auto_start: bool = True, base_bpm: float = 120.0):
+
+        # Auto-detect config file for Raspberry Pi
+        if config_file is None:
+            import platform
+            is_arm = platform.machine().lower() in ['armv7l', 'aarch64', 'arm64']
+            rpi_config = Path("mixer_config_rpi.json")
+
+            if is_arm and rpi_config.exists():
+                config_file = "mixer_config_rpi.json"
+                print("🍓 Raspberry Pi detected - using mixer_config_rpi.json")
+            else:
+                config_file = "mixer_config.json"
 
         # Load configuration
         self.config_loader = ConfigLoader(config_file)
