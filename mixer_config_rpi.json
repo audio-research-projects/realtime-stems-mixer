@@ -1,0 +1,42 @@
+{
+  "_comment": "Performance Energy Mixer Config - Optimized for Raspberry Pi",
+  "audio": {
+    "sample_rate": 22050,
+    "chunk_size": 1024,
+    "enable_pitch_shifting": false,
+    "enable_time_stretching": false,
+    "time_stretch_threshold": 0.1,
+    "max_pitch_shift_semitones": 0,
+    "soft_limiting": true,
+    "master_volume": 0.5
+  },
+  "mixing": {
+    "crossfade_time": 2.0,
+    "auto_normalize": true,
+    "stem_volumes": {
+      "bass": 0.5,
+      "drums": 0.6,
+      "vocals": 0.55,
+      "piano": 0.4,
+      "other": 0.35
+    },
+    "bpm_tolerance_percent": 15.0,
+    "enable_bpm_matching": true
+  },
+  "osc": {
+    "port": 5005,
+    "host": "0.0.0.0",
+    "enable_osc": true
+  },
+  "performance": {
+    "high_quality_time_stretch": false,
+    "hop_length": 512,
+    "enable_audio_effects": false,
+    "low_latency_mode": true
+  },
+  "ui": {
+    "show_debug_info": false,
+    "auto_start_demo": false,
+    "cli_enabled": true
+  }
+}
